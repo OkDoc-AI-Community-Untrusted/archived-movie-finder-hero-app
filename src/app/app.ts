@@ -24,11 +24,11 @@ interface MediaFile {
   selector: 'app-root',
   imports: [CommonModule, FormsModule, MatIconModule],
   template: `
-    <div class="min-h-screen bg-zinc-950 text-zinc-100 p-4 sm:p-6 font-sans overflow-x-hidden" [class.overflow-hidden]="isFocused()">
-      <div class="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+    <div class="min-h-screen bg-zinc-950 text-zinc-100 p-1.5 sm:p-4 md:p-6 font-sans overflow-x-hidden" [class.overflow-hidden]="isFocused()">
+      <div class="max-w-4xl mx-auto space-y-3 sm:space-y-6 md:space-y-8">
         <header class="text-center space-y-2" [class.hidden]="isFocused()">
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">Film Player</h1>
-          <p class="text-sm sm:text-base text-zinc-400">Search and play classic feature films from the Web Archive</p>
+          <h1 class="text-lg sm:text-2xl md:text-3xl font-bold tracking-tight text-white">Film Player</h1>
+          <p class="text-xs sm:text-sm md:text-base text-zinc-400">Search and play classic feature films from the Web Archive</p>
         </header>
 
         <div class="relative flex items-center" [class.hidden]="isFocused()">
@@ -36,14 +36,14 @@ interface MediaFile {
             type="text" 
             [(ngModel)]="searchQuery" 
             (keyup.enter)="searchFilms()"
-            placeholder="Search for a film (e.g., matrix, night)..."
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-4 pr-32 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="Search for a film..."
+            class="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-3 pr-[88px] py-2 sm:pl-4 sm:pr-32 sm:py-3 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
-          <div class="absolute right-2 flex gap-1">
+          <div class="absolute right-1.5 sm:right-2 flex items-center gap-0.5 sm:gap-1">
             @if (searchResults().length > 0 || hasSearched() || searchQuery()) {
               <button 
                 (click)="clearSearch()"
-                class="p-2 text-zinc-400 hover:text-white transition-colors"
+                class="p-1 sm:p-2 text-zinc-400 hover:text-white transition-colors"
                 title="Clear Search"
               >
                 <mat-icon class="text-sm">close</mat-icon>
@@ -52,7 +52,7 @@ interface MediaFile {
             <button 
               (click)="searchFilms()"
               [disabled]="isSearching()"
-              class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 text-sm"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 text-xs sm:text-sm whitespace-nowrap"
             >
               {{ isSearching() ? '...' : 'Search' }}
             </button>
@@ -60,7 +60,7 @@ interface MediaFile {
         </div>
 
         @if (error()) {
-          <div class="bg-red-900/50 border border-red-500/50 text-red-200 p-4 rounded-xl" [class.hidden]="isFocused()">
+          <div class="bg-red-900/50 border border-red-500/50 text-red-200 p-2.5 sm:p-4 rounded-xl text-sm sm:text-base" [class.hidden]="isFocused()">
             {{ error() }}
           </div>
         }
@@ -92,9 +92,16 @@ interface MediaFile {
                   (play)="onPlay()"
                   (pause)="onPause()"
                   (loadeddata)="onVideoLoaded()"
+                  (waiting)="onVideoWaiting()"
+                  (playing)="onVideoPlaying()"
                   (error)="onVideoError($event)"
                   (timeupdate)="onTimeUpdate()"
                 ></video>
+              }
+              @if (isBuffering() && videoUrl() && !isLoadingVideo()) {
+                <div class="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <div class="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
+                </div>
               }
             </div>
             
@@ -110,27 +117,46 @@ interface MediaFile {
               </div>
 
               <!-- Controls -->
-              <div class="p-4 flex flex-wrap items-center gap-2 sm:gap-4">
-                <button (click)="skip(-10)" class="p-2 hover:bg-zinc-700 rounded transition-colors" title="Rewind 10s"><mat-icon>replay_10</mat-icon></button>
-                <button (click)="togglePlay()" class="p-2 hover:bg-zinc-700 rounded transition-colors" title="Play/Pause">
+              <div class="p-1.5 sm:p-3 md:p-4 flex flex-wrap items-center gap-1 sm:gap-2 md:gap-4 relative">
+                <button (click)="skip(-10)" class="p-1 sm:p-2 hover:bg-zinc-700 rounded transition-colors hidden sm:block" title="Rewind 10s"><mat-icon>replay_10</mat-icon></button>
+                <button (click)="togglePlay()" class="p-1 sm:p-2 hover:bg-zinc-700 rounded transition-colors" title="Play/Pause">
                   <mat-icon>{{ isPlaying() ? 'pause' : 'play_arrow' }}</mat-icon>
                 </button>
-                <button (click)="skip(10)" class="p-2 hover:bg-zinc-700 rounded transition-colors" title="Forward 10s"><mat-icon>forward_10</mat-icon></button>
+                <button (click)="skip(10)" class="p-1 sm:p-2 hover:bg-zinc-700 rounded transition-colors hidden sm:block" title="Forward 10s"><mat-icon>forward_10</mat-icon></button>
                 
-                <div class="text-xs text-zinc-400 font-mono ml-2">
+                <div class="text-[10px] sm:text-xs text-zinc-400 font-mono ml-1 sm:ml-2">
                   {{ formatTime(currentTime()) }} / {{ formatTime(duration()) }}
                 </div>
 
+                <!-- Volume: inline on sm+, popup button on small -->
                 <div class="flex items-center gap-2 ml-auto">
+                  <!-- Small screen: volume popup button -->
+                  <div class="relative sm:hidden">
+                    <button (click)="toggleVolumePopup()" class="p-1 hover:bg-zinc-700 rounded transition-colors" title="Volume">
+                      <mat-icon>{{ isMuted() ? 'volume_off' : 'volume_up' }}</mat-icon>
+                    </button>
+                    @if (showVolumePopup()) {
+                      <div class="absolute bottom-full right-0 mb-2 bg-zinc-900 border border-zinc-700 rounded-lg p-3 shadow-xl z-50 min-w-[180px]">
+                        <div class="flex items-center gap-2">
+                          <button (click)="toggleMute()" class="p-1 hover:bg-zinc-700 rounded transition-colors" title="Mute/Unmute">
+                            <mat-icon>{{ isMuted() ? 'volume_off' : 'volume_up' }}</mat-icon>
+                          </button>
+                          <input type="range" min="0" max="1" step="0.05" [value]="volume()" (input)="setVolume($event)" class="flex-1 accent-indigo-500">
+                        </div>
+                      </div>
+                    }
+                  </div>
+                  <!-- Large screen: inline volume -->
                   <button (click)="toggleMute()" class="p-2 hover:bg-zinc-700 rounded transition-colors hidden sm:block" title="Mute/Unmute">
                     <mat-icon>{{ isMuted() ? 'volume_off' : 'volume_up' }}</mat-icon>
                   </button>
                   <input type="range" min="0" max="1" step="0.05" [value]="volume()" (input)="setVolume($event)" class="w-16 sm:w-24 accent-indigo-500 hidden sm:block">
                 </div>
 
-                <div class="flex items-center gap-2 ml-2 sm:ml-4">
+                <!-- Speed: inline on sm+, hidden in quality popup on small -->
+                <div class="hidden sm:flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2 md:ml-4">
                   <mat-icon class="text-zinc-400 text-sm hidden sm:block">speed</mat-icon>
-                  <select [ngModel]="playbackRate()" (ngModelChange)="setPlaybackRate($event)" class="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                  <select [ngModel]="playbackRate()" (ngModelChange)="setPlaybackRate($event)" class="bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 sm:px-2 sm:py-1 text-xs sm:text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     <option [value]="0.5">0.5x</option>
                     <option [value]="1">1x</option>
                     <option [value]="1.25">1.25x</option>
@@ -139,29 +165,82 @@ interface MediaFile {
                   </select>
                 </div>
 
-                <div class="flex items-center gap-2 ml-2 sm:ml-4">
+                <!-- Quality: inline on sm+, hidden in settings popup on small -->
+                <div class="hidden sm:flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2 md:ml-4">
                   @if (mediaFiles().length > 1) {
-                    <mat-icon class="text-zinc-400 text-sm hidden sm:block">high_quality</mat-icon>
-                    <select [ngModel]="currentQuality()" (ngModelChange)="setQuality($event)" class="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 max-w-[80px] sm:max-w-none truncate">
+                    <mat-icon class="text-zinc-400 text-sm">high_quality</mat-icon>
+                    <select [ngModel]="currentQuality()" (ngModelChange)="setQuality($event)" class="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 max-w-[80px] md:max-w-none truncate">
                       @for (file of mediaFiles(); track file.url) {
                         <option [value]="file.format">{{ file.format }}</option>
                       }
                     </select>
                   }
-                  <button (click)="toggleFullscreen()" class="p-2 hover:bg-zinc-700 rounded transition-colors ml-1 sm:ml-2" title="Fullscreen">
+                </div>
+
+                <!-- Small screen: settings popup (speed + quality) -->
+                <div class="relative sm:hidden">
+                  <button (click)="toggleSettingsPopup()" class="p-1 hover:bg-zinc-700 rounded transition-colors" title="Settings">
+                    <mat-icon>settings</mat-icon>
+                  </button>
+                  @if (showSettingsPopup()) {
+                    <div class="absolute bottom-full right-0 mb-2 bg-zinc-900 border border-zinc-700 rounded-lg p-3 shadow-xl z-50 min-w-[200px] space-y-3">
+                      <div>
+                        <div class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Speed</div>
+                        <div class="flex flex-wrap gap-1">
+                          @for (rate of [0.5, 1, 1.25, 1.5, 2]; track rate) {
+                            <button 
+                              (click)="setPlaybackRate(rate)"
+                              class="px-2 py-1 rounded text-xs transition-colors"
+                              [class.bg-indigo-600]="playbackRate() === rate"
+                              [class.text-white]="playbackRate() === rate"
+                              [class.bg-zinc-800]="playbackRate() !== rate"
+                              [class.text-zinc-300]="playbackRate() !== rate"
+                              [class.hover:bg-zinc-700]="playbackRate() !== rate"
+                            >
+                              {{ rate }}x
+                            </button>
+                          }
+                        </div>
+                      </div>
+                      @if (mediaFiles().length > 1) {
+                        <div>
+                          <div class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Quality</div>
+                          <div class="flex flex-col gap-1">
+                            @for (file of mediaFiles(); track file.url) {
+                              <button 
+                                (click)="setQuality(file.format)"
+                                class="px-2 py-1 rounded text-xs text-left transition-colors truncate"
+                                [class.bg-indigo-600]="currentQuality() === file.format"
+                                [class.text-white]="currentQuality() === file.format"
+                                [class.bg-zinc-800]="currentQuality() !== file.format"
+                                [class.text-zinc-300]="currentQuality() !== file.format"
+                                [class.hover:bg-zinc-700]="currentQuality() !== file.format"
+                              >
+                                {{ file.format }}
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="flex items-center gap-0.5 sm:gap-1">
+                  <button (click)="toggleFullscreen()" class="p-1 sm:p-2 hover:bg-zinc-700 rounded transition-colors" title="Fullscreen">
                     <mat-icon>fullscreen</mat-icon>
                   </button>
-                  <button (click)="toggleFocus()" class="p-2 hover:bg-zinc-700 rounded transition-colors ml-1" [title]="isFocused() ? 'Exit Focus' : 'Enter Focus'">
-                    <mat-icon>{{ isFocused() ? 'fullscreen_exit' : 'crop_free' }}</mat-icon>
+                  <button (click)="toggleFocus()" class="p-1 sm:p-2 hover:bg-zinc-700 rounded transition-colors" [title]="isFocused() ? 'Exit Focus' : 'Focus Mode'">
+                    <mat-icon>{{ isFocused() ? 'grid_view' : 'tablet_android' }}</mat-icon>
                   </button>
-                  <button (click)="closeMedia()" class="p-2 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors ml-1" title="Close Media">
+                  <button (click)="closeMedia()" class="p-1 sm:p-2 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors" title="Close Media">
                     <mat-icon>close</mat-icon>
                   </button>
                 </div>
               </div>
             </div>
 
-            <div class="p-4 sm:p-6" [class.hidden]="isFocused()">
+            <div class="p-3 sm:p-4 md:p-6" [class.hidden]="isFocused()">
               <div class="flex items-center gap-2 mb-2">
                 <span class="px-2 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-medium rounded uppercase tracking-wider">
                   {{ currentFilm()?.mediatype }}
@@ -175,14 +254,14 @@ interface MediaFile {
 
         @if (videoResults().length > 0) {
           <div class="space-y-4" [class.hidden]="isFocused()">
-            <h3 class="text-lg font-semibold text-zinc-300">Films</h3>
-            <div class="grid gap-4 sm:grid-cols-2">
+            <h3 class="text-base sm:text-lg font-semibold text-zinc-300">Films</h3>
+            <div class="grid gap-2 sm:gap-4 sm:grid-cols-2">
               @for (film of videoResults(); track film.identifier) {
                 <div 
                   (click)="selectFilm(film)"
                   (keydown.enter)="selectFilm(film)"
                   tabindex="0"
-                  class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 cursor-pointer hover:border-indigo-500 transition-colors group focus:outline-none focus:ring-2 focus:ring-indigo-500 overflow-hidden"
+                  class="bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 sm:p-4 cursor-pointer hover:border-indigo-500 transition-colors group focus:outline-none focus:ring-2 focus:ring-indigo-500 overflow-hidden"
                   [class.border-indigo-500]="currentFilm()?.identifier === film.identifier"
                 >
                   <h4 class="font-medium text-white group-hover:text-indigo-400 transition-colors line-clamp-1 break-words">{{ film.title }}</h4>
@@ -236,6 +315,9 @@ export class App implements OnInit {
   });
   isFocused = signal(false);
   isFullscreen = signal(false);
+  isBuffering = signal(false);
+  showVolumePopup = signal(false);
+  showSettingsPopup = signal(false);
 
   @ViewChild('videoPlayer') videoPlayer!: ElementRef<HTMLVideoElement>;
 
@@ -539,18 +621,21 @@ export class App implements OnInit {
 
   async selectFilm(film: FilmResult) {
     this.currentFilm.set(film);
-    this.isFocused.set(true);
     await this.fetchMediaUrl(film.identifier);
   }
 
   async selectFilmByIdentifier(identifier: string) {
     this.currentFilm.set({ identifier, title: identifier, description: '', downloads: 0, mediatype: 'unknown' });
-    this.isFocused.set(true);
     await this.fetchMediaUrl(identifier);
   }
 
   async fetchMediaUrl(identifier: string) {
+    // Pause current video before changing src to prevent AbortError
+    if (this.videoPlayer?.nativeElement) {
+      this.videoPlayer.nativeElement.pause();
+    }
     this.isLoadingVideo.set(true);
+    this.isBuffering.set(false);
     this.error.set(null);
     this.videoUrl.set(null);
     this.mediaFiles.set([]);
@@ -650,17 +735,27 @@ export class App implements OnInit {
       const currentTime = this.videoPlayer.nativeElement.currentTime;
       const isPaused = this.videoPlayer.nativeElement.paused;
       
+      // Pause before changing src to prevent AbortError
+      this.videoPlayer.nativeElement.pause();
+      this.isBuffering.set(true);
       this.videoUrl.set(file.url);
       this.currentQuality.set(format);
       
-      setTimeout(() => {
+      const onCanPlay = () => {
         if (this.videoPlayer?.nativeElement) {
+          this.videoPlayer.nativeElement.removeEventListener('canplay', onCanPlay);
           this.videoPlayer.nativeElement.currentTime = currentTime;
           if (!isPaused) {
-            this.videoPlayer.nativeElement.play().catch(e => console.warn('Play error:', e));
+            this.videoPlayer.nativeElement.play().catch(() => {});
           }
         }
-      }, 100);
+      };
+      // Wait for next tick so Angular updates the src binding
+      setTimeout(() => {
+        if (this.videoPlayer?.nativeElement) {
+          this.videoPlayer.nativeElement.addEventListener('canplay', onCanPlay, { once: true });
+        }
+      }, 0);
     }
   }
 
@@ -680,12 +775,21 @@ export class App implements OnInit {
 
   onVideoLoaded() {
     this.isLoadingVideo.set(false);
+    this.isBuffering.set(false);
     if (this.videoPlayer?.nativeElement) {
       this.videoPlayer.nativeElement.volume = this.volume();
       this.videoPlayer.nativeElement.muted = this.isMuted();
       this.videoPlayer.nativeElement.playbackRate = this.playbackRate();
       this.duration.set(this.videoPlayer.nativeElement.duration || 0);
     }
+  }
+
+  onVideoWaiting() {
+    this.isBuffering.set(true);
+  }
+
+  onVideoPlaying() {
+    this.isBuffering.set(false);
   }
 
   onTimeUpdate() {
@@ -723,26 +827,40 @@ export class App implements OnInit {
     this.isFocused.update(f => !f);
   }
 
-  toggleFullscreen() {
+  toggleVolumePopup() {
+    this.showSettingsPopup.set(false);
+    this.showVolumePopup.update(v => !v);
+  }
+
+  toggleSettingsPopup() {
+    this.showVolumePopup.set(false);
+    this.showSettingsPopup.update(v => !v);
+  }
+
+  async toggleFullscreen(): Promise<void> {
     if (!this.videoPlayer?.nativeElement) return;
     
     const elem = this.videoPlayer.nativeElement;
     
     if (!document.fullscreenElement) {
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-      } else if ((elem as any).webkitRequestFullscreen) { /* Safari */
-        (elem as any).webkitRequestFullscreen();
-      } else if ((elem as any).msRequestFullscreen) { /* IE11 */
-        (elem as any).msRequestFullscreen();
+      try {
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if ((elem as any).webkitRequestFullscreen) {
+          (elem as any).webkitRequestFullscreen();
+        }
+      } catch (e) {
+        // Fullscreen blocked by iframe without allow="fullscreen" — fall back to focus mode
+        console.warn('Fullscreen not available (likely iframe restriction). Using focus mode instead.');
+        if (!this.isFocused()) {
+          this.isFocused.set(true);
+        }
       }
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
-      } else if ((document as any).webkitExitFullscreen) { /* Safari */
+      } else if ((document as any).webkitExitFullscreen) {
         (document as any).webkitExitFullscreen();
-      } else if ((document as any).msExitFullscreen) { /* IE11 */
-        (document as any).msExitFullscreen();
       }
     }
   }
