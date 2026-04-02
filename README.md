@@ -1,20 +1,42 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Archive Film Finder Hero App
 
-# Run and deploy your AI Studio app
+An OkDoc iframe plugin that lets users search and watch public-domain films from the Internet Archive. Built with Angular 21 and Tailwind CSS.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/4160145c-4973-4677-bee6-9b5dab32fcb6
+- Search the Internet Archive film collection
+- Stream videos with playback speed, quality, and volume controls
+- Responsive design optimized for small iframe embeds
+- Focus mode for distraction-free viewing
+- OkDoc SDK integration with 14 registered tools for AI-driven control
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js 22+
 
+```bash
+npm install
+npm start
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+The app runs at `http://localhost:4200`.
+
+## Build
+
+```bash
+npx ng build
+```
+
+Output is written to `dist/app/browser`.
+
+## Deploy
+
+Push to `main` to trigger the GitHub Actions workflow, which builds and deploys to GitHub Pages.
+
+## OkDoc SDK Integration
+
+This app registers tools with the OkDoc iframe SDK so an AI assistant can control playback:
+
+`search_films`, `select_film`, `play`, `pause`, `skip_forward`, `skip_backward`, `volume_up`, `volume_down`, `toggle_mute`, `set_playback_rate`, `set_quality`, `clear`, `close`, `toggle_focus_mode`, `toggle_fullscreen`
+
+See [IframePluginGuide.md](IframePluginGuide.md) for SDK details.

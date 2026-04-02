@@ -2,7 +2,11 @@
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import "tailwindcss";
 
-/* Compact mat-icons on very small screens (iframe / half-mobile) */
+/*
+ * Compact mat-icons on very small screens (iframe / half-mobile).
+ * !important is required because Angular Material sets inline font-size
+ * on mat-icon elements, which cannot be overridden otherwise.
+ */
 @media (max-width: 380px) {
   mat-icon {
     font-size: 20px !important;
