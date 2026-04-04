@@ -538,24 +538,39 @@ export class App implements OnInit {
 
     const elem = this.videoPlayer.nativeElement;
 
-    if (!document.fullscreenElement) {
-      try {
-        if (elem.requestFullscreen) {
-          await elem.requestFullscreen();
-        } else if ((elem as unknown as Record<string, () => void>)['webkitRequestFullscreen']) {
-          (elem as unknown as Record<string, () => void>)['webkitRequestFullscreen']();
-        }
-      } catch {
-        // Fullscreen blocked by iframe without allow="fullscreen" — fall back to focus mode
-        if (!this.isFocused()) {
-          this.isFocused.set(true);
-        }
-      }
-    } else {
+    if (document.fullscreenElement) {
+      // Exit real browser fullscreen
       if (document.exitFullscreen) {
         document.exitFullscreen();
       } else if ((document as unknown as Record<string, () => void>)['webkitExitFullscreen']) {
         (document as unknown as Record<string, () => void>)['webkitExitFullscreen']();
+      }
+    } else if (this.isFullscreen()) {
+      // Currently in CSS pseudo-fullscreen — exit it
+      this.isFullscreen.set(false);
+      this.isFocused.set(false);
+    } else {
+      // Try real fullscreen; fall back to CSS pseudo-fullscreen if blocked
+      let entered = false;
+      try {
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+          entered = !!document.fullscreenElement;
+        } else if ((elem as unknown as Record<string, () => void>)['webkitRequestFullscreen']) {
+          (elem as unknown as Record<string, () => void>)['webkitRequestFullscreen']();
+          // webkit variant doesn't return a promise — wait briefly to check
+          await new Promise(r => setTimeout(r, 200));
+          entered = !!(document as unknown as Record<string, unknown>)['webkitFullscreenElement'];
+        }
+      } catch {
+        entered = false;
+      }
+
+      if (!entered) {
+        // Fullscreen blocked (no user gesture or iframe restriction) — CSS fallback
+        // this.isFullscreen.set(true);
+        // this.isFocused.set(true);
+        OkDoc.notify('Fullscreen is not supported via voice in host. Please hit the fullscreen button manually, or ask to enter focus mode to expand the player.');
       }
     }
   }
