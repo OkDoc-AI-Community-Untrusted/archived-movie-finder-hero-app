@@ -45,6 +45,7 @@
         [class.fixed]="isFocused()"
         [class.inset-0]="isFocused()"
         [class.z-50]="isFocused()"
+        [class.mb-0]="isFocused()"
         [class.rounded-none]="isFocused()"
         [class.border-none]="isFocused()"
         [class.flex]="isFocused()"
@@ -200,10 +201,10 @@
 
             <div class="flex items-center gap-0.5 sm:gap-1">
               <button (click)="toggleFullscreen()" class="p-1 sm:p-2 hover:bg-zinc-700 rounded transition-colors" title="Fullscreen">
-                <mat-icon>fullscreen</mat-icon>
+                <mat-icon>aspect_ratio</mat-icon>
               </button>
               <button (click)="toggleFocus()" class="p-1 sm:p-2 hover:bg-zinc-700 rounded transition-colors" [title]="isFocused() ? 'Exit Focus' : 'Focus Mode'">
-                <mat-icon>{{ isFocused() ? 'grid_view' : 'tablet_android' }}</mat-icon>
+                <mat-icon>{{ isFocused() ? 'crop_3_2' : 'crop_16_9' }}</mat-icon>
               </button>
               <button (click)="closeMedia()" class="p-1 sm:p-2 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors" title="Close Media">
                 <mat-icon>close</mat-icon>
