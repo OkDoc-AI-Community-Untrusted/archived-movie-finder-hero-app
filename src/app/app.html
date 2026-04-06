@@ -204,7 +204,12 @@
                 <mat-icon>aspect_ratio</mat-icon>
               </button>
               <button (click)="toggleFocus()" class="p-1 sm:p-2 hover:bg-zinc-700 rounded transition-colors" [title]="isFocused() ? 'Exit Focus' : 'Focus Mode'">
-                <mat-icon>{{ isFocused() ? 'crop_3_2' : 'crop_16_9' }}</mat-icon>
+                @if(isFocused()){
+                  <mat-icon>crop_5_4</mat-icon>
+                }
+                @else {
+                  <mat-icon [svgIcon]="'capture'"></mat-icon>
+                }
               </button>
               <button (click)="closeMedia()" class="p-1 sm:p-2 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors" title="Close Media">
                 <mat-icon>close</mat-icon>

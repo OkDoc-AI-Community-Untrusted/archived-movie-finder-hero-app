@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed, effect, ElementRef, inject, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
 import { FilmResult, MediaFile } from './models/film.interface';
 import { ArchiveService } from './services/archive.service';
 import { StorageService } from './services/storage.service';
@@ -55,6 +56,8 @@ export class App implements OnInit {
   @ViewChild('videoPlayer') readonly videoPlayer!: ElementRef<HTMLVideoElement>;
 
   constructor() {
+    this.loadMaterialIcons();
+
     const saved = this.storageService.loadState();
     if (saved) {
       if (saved.searchQuery) {
@@ -93,6 +96,17 @@ export class App implements OnInit {
     }
   }
 
+  loadMaterialIcons(): void {
+    const iconRegistry = inject(MatIconRegistry);
+    const sanitizer = inject(DomSanitizer);
+    iconRegistry.addSvgIconLiteral('capture', sanitizer.bypassSecurityTrustHtml(
+      '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm80-80h480v-320H240v320Zm-80 80v-480 480Z"/></svg>'
+    ));
+    iconRegistry.addSvgIconLiteral('capture-filled', sanitizer.bypassSecurityTrustHtml(
+      '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm80-160h480v-320H240v320Z"/></svg>'
+    ));
+  }
+
   initOkDoc(): void {
     if (typeof OkDoc === 'undefined') {
       return;
@@ -103,7 +117,7 @@ export class App implements OnInit {
       name: 'Archive Film Finder Hero App',
       namespace: 'archive_film',
       version: '1.0.0',
-      description: 'Search and play classic feature films from the Web Archive',
+      description: 'Search and play FILMS/MOVIES from the Web Archive',
       icon: 'film-outline',
       mode: 'foreground',
       author: { name: 'AI Builder', url: 'https://example.com' },
